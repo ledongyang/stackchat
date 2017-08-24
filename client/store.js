@@ -1,5 +1,8 @@
 import { createStore, applyMiddleware } from 'redux';
 import loggerMiddleware from 'redux-logger';
+import thunkMiddleware from 'redux-thunk';
+import axios from 'axios';
+import socket from './socket';
 // ACTION TYPES
 const GOT_MESSAGES_FROM_SERVER = 'GOT_MESSAGES_FROM_SERVER';
 const WRITE_MESSAGE = 'WRITE_MESSAGE';
@@ -27,6 +30,29 @@ export function gotNewMessageFromServer(message) {
   }
 }
 
+export function fetchMessages () {
+  return function thunk (dispatch) {
+    return axios.get('/api/messages')
+    .then(res => res.data)
+    .then(messages => {
+      dispatch(gotMessagesFromServer(messages))
+  });
+  }
+}
+
+export function postMessage (newMessage) {
+  return function thunk (dispatch) {
+    return axios.post('/api/messages', newMessage)
+     .then(res => res.data)
+     .then(message => {
+       console.log(message)
+       dispatch(gotNewMessageFromServer(message));
+       socket.emit('new-message', message);
+       dispatch(writeMessage(''));
+      })
+  }
+}
+
 // INITIAL STATE
 const initialState = {
   messages: [],
@@ -48,6 +74,6 @@ function reducer (state = initialState, action) {
 }
 
 // STORE
-const store = createStore(reducer, applyMiddleware(loggerMiddleware));
+const store = createStore(reducer, applyMiddleware(loggerMiddleware, thunkMiddleware));
 export default store;
 
