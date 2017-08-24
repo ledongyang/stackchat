@@ -27,7 +27,7 @@ export default class NewMessageEntry extends Component {
   handleSubmit(e){
     e.preventDefault();
     const thunk = postMessage({ content: this.state.newMessageEntry,
-      channelId: this.props.channelId
+      channelId: this.props.channelId, name: this.state.author
      });
     store.dispatch(thunk);
   }
